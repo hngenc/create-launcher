@@ -1,0 +1,18 @@
+
+    Create Launcher 0.1
+
+by Hasan N. Genc
+
+======================
+    OVERVIEW
+======================
+
+"Create Launcher" is a simple Nautilus script used to create Unity launchers (.desktop files) by right-clicking on executable files. Currently, the script only works for non-terminal applications.
+
+To set up the script, copy the "Create Launcher" file to your Nautilus scripts directory (~/.local/share/nautilus/scripts/ for Ubuntu 14.04 and later). Give the script permission to be executed. Finally, make sure to visit the script directory with Nautilus so that your new script will appear on the context menu whenever you right-click a file.
+
+======================
+    DEPENDENCIES
+======================
+
+The only dependency is Zenity, which is installed by default on Ubuntu releases anyway.

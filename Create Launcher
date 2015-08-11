@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# Create Launcher 0.1
+# A simple Nautilus script to create Unity launchers by right-clicking on files
+#
+# by Hasan N. Genc
+
+file="$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS"
+file=${file%$'\n'}
+
+# Make sure only one file has been selected
+if [[ $(printf "$file" | wc -l) > 0 ]]; then
+  zenity --error --text="Do not select more than one file."
+  exit 1
+fi
+
+# Make sure that selected file is an executable
+if ! [[ -x $file ]]; then
+  zenity --error --text="You must select a file which can be executed."
+  exit 1
+fi
+
+# Get the launcher's name
+launcher_name=$(zenity --entry --title="Enter launcher name" --text="Enter name of launcher" --entry-text "${file##*/}" --cancel-label=Quit --width=300)
+
+if [[ $? != 0 ]]; then
+  exit 1
+fi
+
+# Get the launcher's exec command
+launcher_exec=$(zenity --entry --title="Enter command" --text="Enter command to be executed by launcher" --entry-text "\"$file\"" --cancel-label=Quit --width=500)
+
+if [[ $? != 0 ]]; then
+  exit 1
+fi
+
+# Get the launcher's icon
+if zenity --question --text="Do you want to give the launcher a specific icon?"; then
+  launcher_icon=$(zenity --file-selection --title="Select icon (cancel if you want to use default icon)")
+fi
+
+# Create the launcher file using the previously obtained information
+destination="$launcher_name.desktop"
+printf "[Desktop Entry]\nType=Application\nTerminal=false\nName=$launcher_name\nExec=$launcher_exec\nIcon=$launcher_icon" >"$destination"
+
+# If the script tries to create the launcher in a folder that it does not have permission to do so, the previous printf command will fail. In that case, let the user choose where to save the launcher
+if [[ $? != 0 ]]; then
+  zenity --error --text="The launcher cannot be saved in your current directory. Please select a new location to save the launcher."
+
+  destination=$(zenity --file-selection --title="Select where to save launcher" --save --confirm-overwrite --file-filter="All files | *.*" --file-filter="Desktop files (.desktop) | *.desktop" )
+
+  if [[ $? != 0 ]]; then
+    exit 1
+  fi
+
+  if [[ $destination != *.desktop ]]; then
+    destination="$destination.desktop"
+  fi
+fi
+
+until printf "[Desktop Entry]\nType=Application\nTerminal=false\nName=$launcher_name\nExec=$launcher_exec\nIcon=$launcher_icon" >"$destination"; do
+  zenity --error --text="The launcher cannot be saved in this directory. Please select a new location to save the launcher."
+
+  destination=$(zenity --file-selection --title="Select where to save launcher" --save --confirm-overwrite --file-filter="All files | *.*" --file-filter="Desktop files (.desktop) | *.desktop" )
+
+  if [[ $? != 0 ]]; then
+    exit 1
+  fi
+
+  if [[ $destination != *.desktop ]]; then
+    destination="$destination.desktop"
+  fi
+done
+
+# Make the launcher executable
+chmod +x "$destination"
+
+exit 0
